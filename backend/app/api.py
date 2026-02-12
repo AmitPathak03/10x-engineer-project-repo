@@ -180,12 +180,15 @@ def delete_collection(collection_id: str):
     
     # BUG #4: FIXED - Now handle prompts that belong to this collection
     # We'll set their collection_id to None
+    # Ensure there is a default 'Uncategorized' collection
+    uncategorized_collection = storage.get_or_create_default_collection()
+    
+    # Reassign prompts to the 'Uncategorized' collection
     prompts = storage.get_all_prompts()
     for prompt in prompts:
         if prompt.collection_id == collection_id:
-            # Create a copy with collection_id set to None
             new_prompt_data = prompt.model_dump()
-            new_prompt_data["collection_id"] = None
+            new_prompt_data["collection_id"] = uncategorized_collection.id
             new_prompt_data["updated_at"] = get_current_time()
             storage.update_prompt(prompt.id, Prompt(**new_prompt_data))
     
