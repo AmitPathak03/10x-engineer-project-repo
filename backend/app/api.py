@@ -30,6 +30,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ================= Common Functions ====================
+# Helper function to reduce redundancy in resource retrieval
+
+def check_and_get_resource(get_func, resource_id, resource_name="Resource"):
+    """Retrieve a resource, raising a 404 error if not found."""
+    resource = get_func(resource_id)
+    if not resource:
+        raise HTTPException(status_code=404, detail=f"{resource_name} not found")
+    
+    return resource
 
 # ============== Health Check ==============
 """Checks the health status of the API.
@@ -115,16 +125,8 @@ Example Usage:
 """
 @app.get("/prompts/{prompt_id}", response_model=Prompt)
 def get_prompt(prompt_id: str):
-    # BUG #1: This will raise a 500 error if prompt doesn't exist
-    # because we're accessing .id on None
-    # Should return 404 instead!
-    prompt = storage.get_prompt(prompt_id)
-    
-    # Check if prompt exists and return it, otherwise raise a 404 error
-    if prompt:
-        return prompt
+    return check_and_get_resource(storage.get_prompt, prompt_id, "Prompt")
 
-    raise HTTPException(status_code=404, detail="Prompt not found")
 
 
 """Create a new prompt.
@@ -151,9 +153,7 @@ def get_prompt(prompt_id: str):
 def create_prompt(prompt_data: PromptCreate):
     # Validate collection exists if provided
     if prompt_data.collection_id:
-        collection = storage.get_collection(prompt_data.collection_id)
-        if not collection:
-            raise HTTPException(status_code=400, detail="Collection not found")
+        check_and_get_resource(storage.get_collection, prompt_data.collection_id, "Collection")
     
     prompt = Prompt(**prompt_data.model_dump())
     return storage.create_prompt(prompt)
@@ -180,18 +180,10 @@ def create_prompt(prompt_data: PromptCreate):
 """
 @app.put("/prompts/{prompt_id}", response_model=Prompt)
 def update_prompt(prompt_id: str, prompt_data: PromptUpdate):
-    existing = storage.get_prompt(prompt_id)
-    if not existing:
-        raise HTTPException(status_code=404, detail="Prompt not found")
-    
-    # Validate collection if provided
+    existing = check_and_get_resource(storage.get_prompt, prompt_id, "Prompt")
     if prompt_data.collection_id:
-        collection = storage.get_collection(prompt_data.collection_id)
-        if not collection:
-            raise HTTPException(status_code=400, detail="Collection not found")
-    
-    # BUG #2: We're not updating the updated_at timestamp!
-    # The updated prompt keeps the old timestamp
+        check_and_get_resource(storage.get_collection, prompt_data.collection_id, "Collection")
+
     updated_prompt = Prompt(
         id=existing.id,
         title=prompt_data.title,
@@ -199,14 +191,12 @@ def update_prompt(prompt_id: str, prompt_data: PromptUpdate):
         description=prompt_data.description,
         collection_id=prompt_data.collection_id,
         created_at=existing.created_at,
-        updated_at=get_current_time()  # BUG: Should be get_current_time()
+        updated_at=get_current_time()  
     )
     
     return storage.update_prompt(prompt_id, updated_prompt)
 
 
-# NOTE: PATCH endpoint is missing! Students need to implement this.
-# It should allow partial updates (only update provided fields)
 """Partially update an existing prompt.
 
     This function applies partial updates to a prompt based on the provided fields.
@@ -229,25 +219,18 @@ def update_prompt(prompt_id: str, prompt_data: PromptUpdate):
 """
 @app.patch("/prompts/{prompt_id}", response_model=Prompt)
 def patch_prompt(prompt_id: str, prompt_data: PromptPatch):
-    existing = storage.get_prompt(prompt_id)
-    if not existing:
-        raise HTTPException(status_code=404, detail="Prompt not found")
-
-    # Validate collection if provided
+    existing = check_and_get_resource(storage.get_prompt, prompt_id, "Prompt")
     if prompt_data.collection_id is not None:
-        collection = storage.get_collection(prompt_data.collection_id)
-        if not collection:
-            raise HTTPException(status_code=400, detail="Collection not found")
+        check_and_get_resource(storage.get_collection, prompt_data.collection_id, "Collection")
 
     # Apply only provided updates
     updates = prompt_data.model_dump(exclude_unset=True)
-    updated_prompt = existing.model_copy(update=updates)
-
-    # Update the updated_at timestamp only if actual fields have been updated
     if updates:
+        updated_prompt = existing.model_copy(update=updates)
         updated_prompt.updated_at = get_current_time()
-
-    return storage.update_prompt(prompt_id, updated_prompt)
+        return storage.update_prompt(prompt_id, updated_prompt)
+    
+    return existing
 
 """Delete a prompt by its unique identifier.
 
@@ -291,6 +274,7 @@ def list_collections():
     collections = storage.get_all_collections()
     return CollectionList(collections=collections, total=len(collections))
 
+
 """Retrieve a collection by its unique identifier.
 
     This function fetches a specific collection using the given `collection_id`.
@@ -310,10 +294,8 @@ def list_collections():
     """
 @app.get("/collections/{collection_id}", response_model=Collection)
 def get_collection(collection_id: str):
-    collection = storage.get_collection(collection_id)
-    if not collection:
-        raise HTTPException(status_code=404, detail="Collection not found")
-    return collection
+    return check_and_get_resource(storage.get_collection, collection_id, "Collection")
+
 
 """Create a new collection.
 
@@ -333,6 +315,7 @@ def get_collection(collection_id: str):
 def create_collection(collection_data: CollectionCreate):
     collection = Collection(**collection_data.model_dump())
     return storage.create_collection(collection)
+
 
 """Delete a collection by its unique identifier.
 
@@ -354,19 +337,15 @@ def create_collection(collection_data: CollectionCreate):
     """
 @app.delete("/collections/{collection_id}", status_code=204)
 def delete_collection(collection_id: str):
-    # BUG #4: We delete the collection but don't handle the prompts!
-    # Prompts with this collection_id become orphaned with invalid reference
-    # Should either: delete the prompts, set collection_id to None, or prevent deletion
-    
+    # Check that the collection exists using the helper function
+    check_and_get_resource(storage.get_collection, collection_id, "Collection")
+
+    # Proceed to delete the collection
     if not storage.delete_collection(collection_id):
         raise HTTPException(status_code=404, detail="Collection not found")
-    
-    # BUG #4: FIXED - Now handle prompts that belong to this collection
-    # We'll set their collection_id to None
-    # Ensure there is a default 'Uncategorized' collection
+
+    # Handle prompts that are associated with the deleted collection
     uncategorized_collection = storage.get_or_create_default_collection()
-    
-    # Reassign prompts to the 'Uncategorized' collection
     prompts = storage.get_all_prompts()
     for prompt in prompts:
         if prompt.collection_id == collection_id:
@@ -376,3 +355,4 @@ def delete_collection(collection_id: str):
             storage.update_prompt(prompt.id, Prompt(**new_prompt_data))
     
     return None
+

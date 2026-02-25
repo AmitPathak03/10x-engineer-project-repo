@@ -140,6 +140,60 @@ promptlab/
 └── .github/                       # To be developed in Week 3 for CI/CD setup
 
 ---
+## Test Cases Implementation
+
+We employ `pytest` along with `pytest-cov` for testing our application. Our test suite ensures robust validation of API endpoints and logic.
+
+### Running Tests with Coverage
+To run the tests and check code coverage, execute the following:
+
+```bash
+pytest --cov=backend --cov-report=term-missing
+```
+
+### Coverage Threshold
+The test suite is configured to fail if code coverage falls below 80%, ensuring consistent quality.
+
+---
+
+## Continuous Integration via GitHub Actions
+
+We have a CI/CD pipeline set up using GitHub Actions to automate testing and deployment tasks:
+
+- **Trigger**: The workflow triggers on pushes and pull requests to the `main` branch.
+- **Steps**:
+  - Set up the Python environment.
+  - Install dependencies.
+  - Run tests with coverage check.
+
+This integration ensures continuous quality and integrates seamlessly with GitHub for streamlined collaboration.
+
+---
+
+## Docker Implementation
+
+The project is containerized to facilitate easy setup and deployment using Docker:
+
+### Docker Configuration
+
+- **Dockerfile**: Builds a lightweight image using a multi-stage build to optimize dependencies.
+- **Docker Compose**: Defined to set up and run the application easily.
+
+#### Running with Docker
+
+1. **Build the Docker Image**:
+   ```bash
+   docker-compose build
+   ```
+
+2. **Run the Docker Container**:
+   ```bash
+   docker-compose up
+   ```
+
+Access the application on [http://localhost:8000]
+
+---
 
 ## Development Workflow
 
