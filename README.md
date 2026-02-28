@@ -40,14 +40,58 @@ PromptLab is an internal tool designed for AI engineers to store, organize, and 
    ```
    The API will be running at: [http://localhost:8000](http://localhost:8000)
 
-3. **API Documentation**
+3. **Frontend Setup**  
+   ```bash
+   cd frontend
+   npm install
+   npm start
+   ```
+   The frontend will be running at: [http://localhost:3000](http://localhost:3000)
+
+4. **API Documentation**
    Access Swagger UI for API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-4. **Running Tests**
+5. **Running Tests**
    ```bash
    cd backend
    pytest tests/ -v
    ```
+
+---
+
+## Project Structure
+
+promptlab/
+├── README.md                      # Documentation for project overview
+├── PROJECT_BRIEF.md               # Assignment details for the project
+├── GRADING_RUBRIC.md              # Grading criteria for the project
+│
+├── backend/                       # Backend directory using FastAPI
+│   ├── app/                       # Application code
+│   │   ├── __init__.py            # Package initialization
+│   │   ├── api.py                 # FastAPI routes (contains some bugs)
+│   │   ├── models.py              # Pydantic data validation models
+│   │   ├── storage.py             # In-memory data storage
+│   │   └── utils.py               # Utility/helper functions
+│   ├── tests/                     # Testing directory
+│   │   ├── __init__.py            # Package initialization for tests
+│   │   ├── test_api.py            # Basic FastAPI route tests
+│   │   └── conftest.py            # Test fixtures setup
+│   ├── main.py                    # Application entry point
+│   └── requirements.txt           # Python dependencies
+│
+├── frontend/                      # React frontend directory
+│   ├── src/                       # Frontend application source code
+│   ├── public/                    # Static files
+│   ├── package.json               # Frontend dependencies and scripts
+│   └── ...                        # Other necessary files
+├── specs/                         # Specifications for features
+│   ├── prompt-versions.md         # Feature specification for Prompt Versions
+│   └── tagging-system.md          # Feature specification for Tagging System
+├── docs/                          # Documentation directory
+│   ├── .gitkeep                   # Placeholder for git
+│   └── API_REFERENCE.md           # API reference documentation
+└── .github/                       # To be developed in Week 3 for CI/CD setup
 
 ---
 
@@ -108,38 +152,6 @@ Collections can be created, listed, and fetched using respective endpoints for o
 
 ---
 
-
-## Project Structure
-
-promptlab/
-├── README.md                      # Documentation for project overview
-├── PROJECT_BRIEF.md               # Assignment details for the project
-├── GRADING_RUBRIC.md              # Grading criteria for the project
-│
-├── backend/                       # Backend directory using FastAPI
-│   ├── app/                       # Application code
-│   │   ├── __init__.py            # Package initialization
-│   │   ├── api.py                 # FastAPI routes (contains some bugs)
-│   │   ├── models.py              # Pydantic data validation models
-│   │   ├── storage.py             # In-memory data storage
-│   │   └── utils.py               # Utility/helper functions
-│   ├── tests/                     # Testing directory
-│   │   ├── __init__.py            # Package initialization for tests
-│   │   ├── test_api.py            # Basic FastAPI route tests
-│   │   └── conftest.py            # Test fixtures setup
-│   ├── main.py                    # Application entry point
-│   └── requirements.txt           # Python dependencies
-│
-├── frontend/                      # Placeholder for future frontend development
-├── specs/                         # Specifications for features
-│   ├── prompt-versions.md         # Feature specification for Prompt Versions
-│   └── tagging-system.md          # Feature specification for Tagging System
-├── docs/                          # Documentation directory
-│   ├── .gitkeep                   # Placeholder for git
-│   └── API_REFERENCE.md           # API reference documentation
-└── .github/                       # To be developed in Week 3 for CI/CD setup
-
----
 ## Test Cases Implementation
 
 We employ `pytest` along with `pytest-cov` for testing our application. Our test suite ensures robust validation of API endpoints and logic.
