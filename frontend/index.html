@@ -5,9 +5,64 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>frontend</title>
+    <style>
+      /* Splash screen styles */
+      .splash-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #1c2833; /* Adjust to your color */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 500;
+        animation: fadeOut 1s ease 2s forwards;
+        flex-direction: column;
+      }
+      .splash-screen img {
+        max-width: 100%; /* Scale the GIF to fit */
+        height: auto;
+      }
+      .splash-title {
+        color: #fff; /* Text color */
+        font-size: 3rem; /* Size */
+        animation: zoomIn 1s ease;
+        margin-top: 20px;
+      }
+
+      @keyframes zoomIn {
+        from { transform: scale(0.8); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+
+      @keyframes fadeOut {
+        to { opacity: 0; visibility: hidden; }
+      }
+
+      .hidden {
+        display: none;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="splash-screen" class="splash-screen">
+      <img src="/src/assets/splash.gif" alt="Loading" />
+    </div>
+    <div id="root" class="hidden"></div>
+
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      window.addEventListener('load', () => {
+        const splashScreen = document.getElementById('splash-screen');
+        const mainContent = document.getElementById('root');
+
+        setTimeout(() => {
+          splashScreen.style.display = 'none';
+          mainContent.classList.remove('hidden');
+        }, 3000); // Adjust timing for gif duration
+      });
+    </script>
   </body>
 </html>
