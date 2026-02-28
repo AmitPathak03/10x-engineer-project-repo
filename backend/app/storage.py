@@ -117,6 +117,7 @@ class Storage:
         if prompt_id in self._prompts:
             version = PromptVersions(
                 version_id=generate_id(),
+                prompt_id=prompt_id,
                 prompt_data=prompt_data
             )
             if prompt_id not in self._prompt_versions:

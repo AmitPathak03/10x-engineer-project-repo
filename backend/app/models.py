@@ -1,8 +1,8 @@
 """Pydantic models for PromptLab"""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from uuid import uuid4
 from typing import TYPE_CHECKING
 
@@ -12,7 +12,7 @@ def generate_id() -> str:
 
 
 def get_current_time() -> datetime:
-    return datetime.utcnow()
+    return datetime.now(timezone.utc)
 
 
 # ============== Prompt Models ==============
@@ -99,24 +99,20 @@ class Prompt(PromptBase):
     updated_at: datetime = Field(default_factory=get_current_time)
     versions: List['PromptVersions'] = Field(default_factory=list)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PromptVersions(BaseModel):
-    """Model representing a version of a prompt.
+    """Model representing a version of a prompt snapshot.
 
     Attributes:
-        version_id (str): A unique identifier for this version of the prompt.
-        prompt_data (Prompt): The data of the prompt at this version.
-        timestamp (datetime): The time when this version was created, defaults
-            to the current time on creation.
-
+        version_id (str): A unique identifier for this version.
+        prompt_id (str): ID of the prompt this version belongs to.
+        prompt_data (PromptBase): Snapshot of the prompt data at this version.
+        timestamp (datetime): When this version was created.
     """
-    version_id: str
-    prompt_data: Prompt
-    timestamp: datetime = Field(default_factory=get_current_time)
-    version_id: str
-    prompt_data: Prompt
+    version_id: str = Field(default_factory=generate_id)
+    prompt_id: str
+    prompt_data: PromptBase
     timestamp: datetime = Field(default_factory=get_current_time)
 
 # ============== Collection Models ==============
@@ -163,8 +159,7 @@ class Collection(CollectionBase):
     id: str = Field(default_factory=generate_id)
     created_at: datetime = Field(default_factory=get_current_time)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============== Response Models ==============
@@ -209,3 +204,6 @@ class HealthResponse(BaseModel):
     """
     status: str
     version: str
+
+# Rebuild models for forward references
+Prompt.model_rebuild()

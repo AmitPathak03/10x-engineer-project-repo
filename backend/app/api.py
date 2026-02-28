@@ -224,6 +224,7 @@ def patch_prompt(prompt_id: str, prompt_data: PromptPatch):
     # Apply only provided updates
     updates = prompt_data.model_dump(exclude_unset=True)
     if updates:
+        storage.create_prompt_version(prompt_id, existing)
         updated_prompt = existing.model_copy(update=updates)
         updated_prompt.updated_at = get_current_time()
         return storage.update_prompt(prompt_id, updated_prompt)
